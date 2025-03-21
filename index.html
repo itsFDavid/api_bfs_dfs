@@ -139,7 +139,7 @@
     const solucionTxt = document.querySelector('#solucion').value;
     const nodo_inicial = nodoInicial.split(',').map(nodo => parseInt(nodo));
     const solucion = solucionTxt.split(',').map(nodo => parseInt(nodo));
-    const URL = 'https://api-bfs-dfs-1.onrender.com';
+    const URL = 'https://api-bfs-dfs.onrender.com';
     
     const resDfsRec = await fetch(`${URL}/DFS_rec`, {
       method: 'POST',
