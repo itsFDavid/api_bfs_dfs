@@ -63,4 +63,4 @@ def DFS():
     return jsonify(resultado)
 
 if __name__ == '__main__':
-    app.run()
+    app.run(port=5000)
