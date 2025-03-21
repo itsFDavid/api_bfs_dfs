@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from arbol import Nodo
@@ -62,5 +63,10 @@ def DFS():
     resultado.reverse()
     return jsonify(resultado)
 
+# get port of .env
+PORT= os.getenv('PORT')
+if PORT is None:
+    PORT = 6000
+
 if __name__ == '__main__':
-    app.run(port=5000)
+    app.run(port=PORT)
