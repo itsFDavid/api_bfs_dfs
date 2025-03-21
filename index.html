@@ -139,9 +139,9 @@
     const solucionTxt = document.querySelector('#solucion').value;
     const nodo_inicial = nodoInicial.split(',').map(nodo => parseInt(nodo));
     const solucion = solucionTxt.split(',').map(nodo => parseInt(nodo));
-
+    const URL = 'https://api-bfs-dfs-1.onrender.com';
     
-    const resDfsRec = await fetch('http://127.0.0.1:5001/DFS_rec', {
+    const resDfsRec = await fetch(`${URL}/DFS_rec`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -149,7 +149,7 @@
       body: JSON.stringify({nodo_inicial, solucion})
     });
 
-    const resBfs = await fetch('http://127.0.0.1:5001/BFS', {
+    const resBfs = await fetch(`${URL}/BFS`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -157,7 +157,7 @@
       body: JSON.stringify({nodo_inicial, solucion})
     })
 
-    const resDfs = await fetch('http://127.0.0.1:5001/DFS', {
+    const resDfs = await fetch(`${URL}/DFS`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
