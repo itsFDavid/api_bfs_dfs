@@ -30,20 +30,20 @@ def buscar_solucion_DFS_rec(nodo_inicial, solucion, visitados):
                 return sol
     return None
 
-# if __name__ == "__main__":
-#     estado_inicial = [4, 2, 3, 1]
-#     solucion = [1, 2, 3, 4]
-#     visitados = []
-#     nodo_inicial = Nodo(estado_inicial)
-#     nodo = buscar_solucion_DFS_rec(nodo_inicial, solucion, visitados)
-#     # Mostrar resultado
-#     resultado = []
-#     while nodo.get_padre() is not None:
-#         resultado.append(nodo.get_datos())
-#         nodo = nodo.get_padre()
-#     resultado.append(estado_inicial)
-#     resultado.reverse()
-#     print(resultado)
+if __name__ == "__main__":
+    estado_inicial = [4, 2, 3, 1]
+    solucion = [1, 2, 3, 4]
+    visitados = []
+    nodo_inicial = Nodo(estado_inicial)
+    nodo = buscar_solucion_DFS_rec(nodo_inicial, solucion, visitados)
+    # Mostrar resultado
+    resultado = []
+    while nodo.get_padre() is not None:
+        resultado.append(nodo.get_datos())
+        nodo = nodo.get_padre()
+    resultado.append(estado_inicial)
+    resultado.reverse()
+    print(resultado)
 
 # [[4, 2, 3, 1], [2, 4, 3, 1], [2, 3, 4, 1], [3, 2, 4, 1], [3, 4, 2, 1], [4, 3, 2, 1], [4, 3, 1, 2],
 # [3, 4, 1, 2], [3, 1, 4, 2], [1, 3, 4, 2], [1, 4, 3, 2], [4, 1, 3, 2], [4, 1, 2, 3], [1, 4, 2, 3],
