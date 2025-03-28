@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solucion DFS profundidad limtada</title>
+  <style>
+    ** {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-image: linear-gradient(45deg, #1eb1eb 0%,#fda085 100%);
+      background-attachment: fixed;
+      color: #2e2727;
+      font-family: 'Arial', sans-serif;
+    }
+
+    section{
+      margin-top: 20px;
+    }
+    .result {
+      border: 2px solid #000;
+      border-radius: 20px;
+      padding: 10px;
+      margin-top: 10px;
+      width: 50%;
+      height: 20rem;
+      margin: 0 auto;
+      overflow-x: auto;
+    }
+    h2 {
+      text-align: center;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      width: 50%;
+      margin: 0 auto;
+      margin-top: 5rem;
+      gap: 10px;
+      
+      && label {
+        font-size: 1.2rem;
+      }
+      && input {
+        margin-top: 10px;
+        padding: 5px;
+        font-size: 1rem;
+        width: 98%;
+        border-radius: 5px;
+        border: none;
+      }
+      && button {
+        padding: 5px;
+        font-size: 1rem;
+        width: 100%;
+        cursor: pointer;
+        border-radius: 5px;
+        border: none;
+      }
+    }
+    .solucion {
+      background-color: #fda085;
+      color: #2e2727;
+    }
+    .solucion:hover {
+      background-color: #f87f5e;
+      color: #2e2727;
+      scale: 1.03;
+    }
+    .clear {
+      background-color: transparent;
+      color: #ff0101;
+      text-decoration: underline;
+    }
+    .clear:hover {
+      scale: 1.03;
+    }
+    .metodo {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .metodo label {
+      font-size: 1.2rem;
+    }
+    .metodo select {
+      padding: 5px;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <form action="">
+      <div>
+        <label for="nodo_inicial">Ingrese el nodo inicial</label>
+        <input type="text" id="nodo_inicial" name="nodoinicial" placeholder="EDO.MEX">
+      </div>
+      <div>
+        <label for="solucion">Ingrese la solucion a buscar</label>
+        <input type="text" id="solucion" name="solucion" placeholder="HIDALGO">
+      </div>
+      <button type="submit" class="solucion">Buscar solucion</button>
+      <button type="reset" class="clear">Limpiar campos</button>
+    </form>
+  </main>
+  <section>
+    <h2>Recorrido DFS Recursivo</h2>
+    <div id="resultado_DFS_rec" class="result"></div>
+  </section>  
+</body>
+<script>
+  document.addEventListener("DOMContentLoaded", function(){
+    const form = document.querySelector('form');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nodo_inicial = document.querySelector('#nodo_inicial').value;
+    const solucion = document.querySelector('#solucion').value;
+    const URL = 'http://127.0.0.1:5001/DFS_prof_iter';
+    
+    const resDfsRec = await fetch(`${URL}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({nodo_inicial, solucion})
+    });
+
+    const dataDFS_rec = await resDfsRec.json();
+    const resultadoTextDFSRect = document.querySelector('#resultado_DFS_rec');
+
+    
+    resultadoTextDFSRect.innerHTML = dataDFS_rec.map((item, index) => {
+      // si es la ultima iteracion mostrarlo de oclor verde
+      if (index === dataDFS_rec.length - 1) {
+        return `<p style="color: green">${index + 1} - [${item}] - Solucion encontrada</p>`
+      }
+      return `<p>${index + 1} - [${item}]</p>`
+    }).join('');
+
+
+  });
+  });
+</script>
+</html>
