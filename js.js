@@ -88,7 +88,8 @@ addEdgeBtn.addEventListener("click", (e) => {
 
   // Validate
   if (!source || !target) {
-    edgeError.textContent = "Por favor seleccione tanto el nodo de origen como el de destino";
+    edgeError.textContent =
+      "Por favor seleccione tanto el nodo de origen como el de destino";
     return;
   }
 
@@ -127,7 +128,7 @@ findPathBtn.addEventListener("click", async (e) => {
   }
 
   try {
-    const response = await fetch("http://localhost:5005/dijkstra", {
+    const response = await fetch("https://api-dijkstra.onrender.com/dijkstra", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
