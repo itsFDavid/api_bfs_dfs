@@ -92,6 +92,7 @@ def dijkstra_api():
 
     try:
         camino, distancia = dijkstra(grafo, nodo_inicial, nodo_final)
+        camino.insert(0, nodo_inicial)
         imagenbase64 = dibujar_grafo(grafo, camino)
         image_url = f"data:image/png;base64,{imagenbase64}"
 
