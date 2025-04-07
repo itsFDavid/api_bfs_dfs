@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dijkstra</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-image: linear-gradient(45deg, #1eb1eb 0%,#fda085 100%);
+      background-attachment: fixed;
+      color: #2e2727;
+      font-family: 'Arial', sans-serif;
+    }
+
+    section{
+      margin-top: 20px;
+    }
+    .result {
+      border: 2px solid #000;
+      border-radius: 20px;
+      padding: 10px;
+      margin-top: 10px;
+      width: 50%;
+      height: 20rem;
+      margin: 0 auto;
+      overflow-x: auto;
+    }
+    h2 {
+      text-align: center;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      width: 50%;
+      margin: 0 auto;
+      margin-top: 5rem;
+      gap: 10px;
+      
+      && label {
+        font-size: 1.2rem;
+      }
+      && input {
+        margin-top: 10px;
+        padding: 5px;
+        font-size: 1rem;
+        width: 98%;
+        border-radius: 5px;
+        border: none;
+      }
+      && button {
+        padding: 5px;
+        font-size: 1rem;
+        width: 100%;
+        cursor: pointer;
+        border-radius: 5px;
+        border: none;
+      }
+    }
+    .solucion {
+      background-color: #fda085;
+      color: #2e2727;
+    }
+    .solucion:hover {
+      background-color: #f87f5e;
+      color: #2e2727;
+      scale: 1.03;
+    }
+    .clear {
+      background-color: transparent;
+      color: #ff0101;
+      text-decoration: underline;
+    }
+    .clear:hover {
+      scale: 1.03;
+    }
+    .metodo {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .metodo label {
+      font-size: 1.2rem;
+    }
+    .metodo select {
+      padding: 5px;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: none;
+    }
+    .solutions {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      display: none;
+      && label {
+        font-size: 1.2rem;
+      }
+      && select {
+        padding: 5px;
+        font-size: 1rem;
+        border-radius: 5px;
+        border: none;
+      }
+    }
+    .oculto {
+      display: none;
+    }
+    .mostrado {
+      display: inline;
+    }
+    .añadir_peso {
+      margin: 10px 0;
+      background-color: #fda085;
+      color: #2e2727;
+      border-radius: 5px;
+      padding: 5px;
+      cursor: pointer;
+    }
+    .añadir_peso:hover {
+      background-color: #f87f5e;
+      color: #2e2727;
+      scale: 1.03;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <form id="form_grafo">
+      <div>
+        <label for="cantidad_nodos">
+          Seleccione la cantidad de nodos para el grafo
+        </label>
+        <input type="number" id="cantidad_nodos" name="cantidad_nodos" placeholder="10" onkeyup="crearNodos()">
+      </div>
+      <!-- Crear conexion entre nodos, pero dinamicamente -->
+      <div id="crear_conexion" class="metodo oculto">
+        <div>
+          <div>
+            <label for="nodo_conexion">
+              Seleccione el nodo origen
+            </label>
+  
+          </div>
+          <select name="nodos" id="nodo_origen">
+          </select>
+        </div>
+        <div>
+          <label for="nodo_conexion">
+            Seleccione el nodo destino
+          </label>
+          <select name="nodos" id="nodo_destino" class="metodo">
+          </select>
+        </div>
+
+        <div>
+          <label for="peso_arista">
+            Seleccione el peso de la arista
+          </label>
+          <input type="number" id="peso_arista" name="peso_arista" placeholder="10">
+          <button type="button" id="añadir_peso" class="añadir_peso" onclick="crearConexion()">Añadir peso</button>
+        </div>
+        <div>
+          <p id="error-conexiones-nodos"></p>
+        </div>
+      </div>
+
+    </form>
+    <form id="form_dijkstra">
+      <div class="solutions">
+        <label for="nodo_inicial">Ingrese el nodo inicial</label>
+        <select name="nodo_inicial" id="nodo_inicial" class="metodo">
+        </select>
+      </div>
+      <div class="solutions">
+        <label for="solucion">Ingrese el nodo final</label>
+        <select name="nodo_solucion" id="nodo_solucion" class="metodo">
+
+        </select>
+      </div>
+      <button type="button" class="solucion" id="buscar_solucion">Buscar solucion</button>
+      <button type="reset" class="clear">Limpiar campos</button>
+    </form>
+  </main>
+  <section>
+    <h2>Recorrido Dijkstra</h2>
+    <div id="" class="result">
+      <p id="resultado_Dijkstra"></p>
+      <img src="" alt="" srcset="" id="imagen_dijkstra">
+    </div>
+  </section>  
+</body>
+
+<script>
+
+  // Crear un grafo vacío
+  var grafo = {};
+  const URL_API = 'http://localhost:5005';
+
+  function crearNodos(){
+    const cantidadNodos = document.getElementById("cantidad_nodos").value;
+    const crearNodos = document.getElementById("crear_conexion");
+    if(cantidadNodos <= 1 || cantidadNodos == ""){
+      crearNodos.classList.remove("mostrado");
+      crearNodos.classList.add("oculto");
+      alert("La cantidad de nodos debe ser mayor a 1");
+      return;
+    }
+    crearNodos.classList.remove("oculto");
+    crearNodos.classList.add("mostrado");
+    const nodos = [];
+    for (let i = 1; i <= cantidadNodos; i++) {
+      nodos.push(`Nodo ${i}`);
+    }
+    const selectNodos = document.getElementById("nodo_origen");
+    const selectNodosDestino = document.getElementById("nodo_destino");
+    const selectNodosInicial = document.getElementById("nodo_inicial");
+    const selectNodosSolucion = document.getElementById("nodo_solucion");
+    const solutions = document.querySelectorAll(".solutions");
+    solutions.forEach((solution) => {
+      solution.classList.remove("oculto");
+      solution.classList.add("mostrado");
+    });
+    selectNodosInicial.innerHTML = "";
+    selectNodosSolucion.innerHTML = "";
+    selectNodos.innerHTML = "";
+    selectNodosDestino.innerHTML = "";
+    nodos.forEach((nodo, index) => {
+      const option = document.createElement("option");
+      option.value = nodo;
+      option.textContent = nodo;
+      selectNodos.appendChild(option);
+      selectNodosDestino.appendChild(option.cloneNode(true)); 
+      selectNodosInicial.appendChild(option.cloneNode(true));
+      selectNodosSolucion.appendChild(option.cloneNode(true));
+    });
+    console.log(nodos);
+  }
+
+  function crearConexion(){
+    // event.preventDefault();
+    const nodoOrigen = document.getElementById("nodo_origen").value;
+    const nodoDestino = document.getElementById("nodo_destino").value;
+    const pesoArista = document.getElementById("peso_arista").value;
+    const errorConexion = document.getElementById("error-conexiones-nodos");
+    errorConexion.innerHTML = "";
+    // Validar que los nodos no sean iguales
+    if(nodoOrigen === nodoDestino){
+      errorConexion.innerHTML = "Los nodos no pueden ser iguales";
+      errorConexion.style.color = "red";
+      errorConexion.style.fontSize = "1.2rem";
+      errorConexion.style.fontWeight = "bold";
+      errorConexion.style.textAlign = "center";
+      errorConexion.style.marginTop = "10px";
+      errorConexion.style.marginBottom = "10px";
+      setTimeout(() => {
+        errorConexion.innerHTML = "";
+      }, 3000);
+      return;
+    }
+    // Validar que el peso de la arista sea un número
+    if(isNaN(pesoArista) || pesoArista <= 0){
+      errorConexion.innerHTML = "El peso de la arista debe ser un número mayor a 0";
+      errorConexion.style.color = "red";
+      errorConexion.style.fontSize = "1.2rem";
+      errorConexion.style.fontWeight = "bold";
+      errorConexion.style.textAlign = "center";
+      errorConexion.style.marginTop = "10px";
+      errorConexion.style.marginBottom = "10px";
+      setTimeout(() => {
+        errorConexion.innerHTML = "";
+      }, 3000);
+      return;
+    }
+
+    if(!grafo[nodoOrigen]){
+      grafo[nodoOrigen] = {};
+    }
+    if(!grafo[nodoDestino]){
+      grafo[nodoDestino] = {};
+    }
+    // Agregar la arista al grafo
+    grafo[nodoOrigen][nodoDestino] = parseInt(pesoArista);
+
+
+    document.getElementById("peso_arista").value = "";
+    console.log(grafo);
+  }
+  
+  const buscarBtn = document.getElementById("buscar_solucion");
+  buscarBtn.addEventListener("click", async function(event){
+    event.preventDefault();
+    console.log("Buscando solucion");
+    const nodoInicial = document.getElementById("nodo_inicial").value;
+    const nodoSolucion = document.getElementById("nodo_solucion").value;
+    const resultadoDijkstra = document.getElementById("resultado_Dijkstra");
+    const imagenDijkstra = document.getElementById("imagen_dijkstra");
+    resultadoDijkstra.innerHTML = "";
+    imagenDijkstra.src = "";
+    if(!grafo[nodoInicial]){
+      resultadoDijkstra.innerHTML = "El nodo inicial no existe";
+      return;
+    }
+    if(!grafo[nodoSolucion]){
+      resultadoDijkstra.innerHTML = "El nodo solucion no existe";
+      return;
+    }
+    if(nodoInicial === nodoSolucion){
+      resultadoDijkstra.innerHTML = "El nodo inicial no puede ser igual al nodo solucion";
+      return;
+    }
+    resultadoDijkstra.innerHTML = "Buscando solucion...";
+    fetch(`${URL_API}/dijkstra`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        grafo: grafo,
+        nodo_inicial: nodoInicial,
+        nodo_final: nodoSolucion
+      })
+    }).then(
+      response => {
+        if(!response.ok){
+          throw new Error("Error en la respuesta de la API");
+        }
+        return response.json();
+      }
+    ).then(data => {
+      console.log(data);
+      if(data.error){
+        resultadoDijkstra.innerHTML = data.error;
+        return;
+      }
+      const { camino, distancia, imagen_url } = data;
+      resultadoDijkstra.innerHTML = `El camino más corto es: ${camino.join(" -> ")} con una distancia de: ${distancia}`;
+      imagenDijkstra.src = `http://localhost:5005/${imagen_url}`;
+    }).catch(error => {
+      console.error("Error:", error);
+      resultadoDijkstra.innerHTML = "Error al buscar la solucion";
+    }
+    )
+
+  });
+
+  const añadirEstilos = () => {
+    const resultadoDijkstra = document.getElementById("resultado_Dijkstra");
+    resultadoDijkstra.style.color = "red";
+    resultadoDijkstra.style.fontSize = "1.2rem";
+    resultadoDijkstra.style.fontWeight = "bold";
+    resultadoDijkstra.style.textAlign = "center";
+    resultadoDijkstra.style.display = "flex";
+    resultadoDijkstra.style.justifyContent = "center";
+    resultadoDijkstra.style.alignItems = "center";
+    resultadoDijkstra.style.marginTop = "10px";
+    resultadoDijkstra.style.marginBottom = "10px";
+  }
+
+  const limpiarEstilos = () => {
+    const resultadoDijkstra = document.getElementById("resultado_Dijkstra");
+    resultadoDijkstra.style.color = "";
+    resultadoDijkstra.style.fontSize = "";
+    resultadoDijkstra.style.fontWeight = "";
+    resultadoDijkstra.style.textAlign = "";
+    resultadoDijkstra.style.marginTop = "";
+    resultadoDijkstra.style.marginBottom = "";
+  }
+  
+  const limpiarCampos = () => {
+    const resultadoDijkstra = document.getElementById("resultado_Dijkstra");
+    resultadoDijkstra.innerHTML = "";
+    const crearNodos = document.getElementById("crear_conexion");
+    crearNodos.classList.remove("mostrado");
+    crearNodos.classList.add("oculto");
+    grafo = {};
+  }
+  const botonLimpiar = document.querySelector(".clear");
+  botonLimpiar.addEventListener("click", function(event){
+    event.preventDefault();
+    limpiarCampos();
+    limpiarEstilos();
+  });
+
+</script>
+</html>
