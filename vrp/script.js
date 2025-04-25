@@ -1,4 +1,4 @@
-const URL_API = "http://localhost:5001";
+const URL_API = "https://api-bfs-dfs-1.onrender.com";
 
 const coord_default = {
   "EDO.MEX": [19.29370432359307, -99.65371080401178],
