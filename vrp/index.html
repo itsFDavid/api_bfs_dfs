@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VRP</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  
+
+  <div class="container">
+    <h1>VRP</h1>
+    <div>
+      <h2>Pedidos y Coordenadas</h2>
+      <table id="tabla-coordenadas">
+        <thead>
+          <tr>
+            <th>Ubicación</th>
+            <th>Latitud</th>
+            <th>Longitud</th>
+            <th>Pedidos</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <form id="vrp-form">
+      <div class="form-group">
+        <label for="max_carga">Carga Máxima por Vehículo</label>
+        <input type="number" id="max_carga" value="40" />
+      </div>
+      <div class="form-group">
+        <label for="tiempo_max">Tiempo Máximo (horas)</label>
+        <input type="number" id="tiempo_max" value="8" />
+      </div>
+      <div class="form-group">
+        <label for="velocidad">Velocidad Promedio (km/h)</label>
+        <input type="number" id="velocidad" value="60" />
+      </div>
+      <div class="form-group">
+        <label for="tiempo_carga">Tiempo de Carga por Pedido (horas)</label>
+        <div class="descripcion">
+          <p>Tiempo de carga por pedido (en horas) se calcula como: (minutos * hora) / 60 minutos</p>
+          <p>Ejemplo: 9 minutos = (9 * 1) / 60 = 0.15 horas</p>
+        </div>
+        <input type="number" step="0.01" id="tiempo_carga" value="0.15" />
+      </div>
+      <button type="submit">Calcular Rutas</button>
+    </form>
+
+    <div id="resultado" class="resultado"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
