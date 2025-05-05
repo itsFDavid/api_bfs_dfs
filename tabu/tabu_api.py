@@ -69,15 +69,20 @@ def tabu_search(coord, iteraciones=100, tamaño_tabu=10):
 def resolver_tsp():
     data = request.get_json(silent=True) or {}
 
-    coord = data.get("coordenadas", COORDENADAS_DEFECTO)
+    coord = data.get("coord", COORDENADAS_DEFECTO)
     iteraciones = data.get("iteraciones", 100)
-    tamaño_tabu = data.get("tamaño_tabu", 10)
+    tamaño_tabu = data.get("tabu_tam", 10)
+    # print("DATA RECIBIDA:", {
+    #     "coord": coord,
+    #     "iteraciones": iteraciones,
+    #     "tamaño_tabu": tamaño_tabu
+    # })
 
     try:
         ruta, distancia_total = tabu_search(coord, iteraciones, tamaño_tabu)
         return jsonify({
             "ruta": ruta,
-            "distancia_total": distancia_total
+            "distancia": distancia_total
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
