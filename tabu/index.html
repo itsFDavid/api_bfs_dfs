@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BUSQUEDA TABÚ</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>BUSQUEDA TABÚ</h1>
+    <div>
+      <h2>Coordenadas</h2>
+      <table id="tabla-coordenadas">
+        <thead>
+          <tr>
+            <th>Ubicación</th>
+            <th>Latitud</th>
+            <th>Longitud</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div id="add_ubi_container">
+      <button id="add_ubi_btn">Añadir Ubicación</button>
+    </div>
+    <div class="form-group" id="container_add_ubicacion" style="display: none;">
+    </div>
+    <div>
+      <h2>Parámetros</h2>
+      <div class="form-group">
+        <label for="num_iteraciones">Número de Iteraciones:</label>
+        <input type="number" id="num_iter" value="100" />
+      </div>
+      <div class="form-group">
+        <label for="num_vecinos">Tamaño de tabú:</label>
+        <input type="number" id="tabu_tam" value="10" />
+    </div>
+    <div>
+      <button type="button" id="btn">Calcular Rutas</button>
+    </div>
+    <div id="resultado" class="resultado"></div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
