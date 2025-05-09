@@ -24,9 +24,30 @@ function fillTable() {
       <td>${ciudad}</td>
       <td>${lat.toFixed(6)}</td>
       <td>${lon.toFixed(6)}</td>
+      <td>
+        <button class="edit-btn" data-ciudad="${ciudad}">Editar</button>
+        <button class="delete-btn" data-ciudad="${ciudad}">Eliminar</button>
+      </td>
     `;
     tbody.appendChild(fila);
   }
+
+  // Agregar eventos a los botones
+  document.querySelectorAll(".delete-btn").forEach((btn) =>
+    btn.addEventListener("click", (e) => {
+      const ciudad = e.target.dataset.ciudad;
+      delete default_coord[ciudad];
+      fillTable();
+    })
+  );
+
+  document.querySelectorAll(".edit-btn").forEach((btn) =>
+    btn.addEventListener("click", (e) => {
+      const ciudad = e.target.dataset.ciudad;
+      const [lat, lon] = default_coord[ciudad];
+      showEditForm(ciudad, lat, lon);
+    })
+  );
 }
 
 document.addEventListener("DOMContentLoaded", fillTable);
@@ -130,3 +151,45 @@ btnAddUbicacion.addEventListener("click", () => {
     div_form.innerHTML = ""; // Limpiar el contenido del div
   });
 });
+
+function showEditForm(ciudad, lat, lon) {
+  const div_form = document.getElementById("container_add_ubicacion");
+  div_form.style.display = "block";
+  div_form.innerHTML = ""; // Limpiar contenido previo
+
+  const form = document.createElement("form");
+  form.innerHTML = `
+    <h3>Editando "${ciudad}"</h3>
+    <div class="form-group">
+      <div>
+        <label for="edit_latitud">Latitud:</label>
+        <input type="number" id="edit_latitud" step="any" value="${lat}" required>
+      </div>
+      <div>
+        <label for="edit_longitud">Longitud:</label>
+        <input type="number" id="edit_longitud" step="any" value="${lon}" required>
+      </div>
+    </div>
+    <div class="buttons-add">
+      <button type="submit">Guardar</button>
+      <button type="button" id="btnClose">Cancelar</button>
+    </div>
+  `;
+
+  div_form.appendChild(form);
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const newLat = parseFloat(document.getElementById("edit_latitud").value);
+    const newLon = parseFloat(document.getElementById("edit_longitud").value);
+    default_coord[ciudad] = [newLat, newLon];
+    fillTable();
+    div_form.style.display = "none";
+    div_form.innerHTML = "";
+  });
+
+  document.getElementById("btnClose").addEventListener("click", () => {
+    div_form.style.display = "none";
+    div_form.innerHTML = "";
+  });
+}
