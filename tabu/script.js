@@ -25,8 +25,10 @@ function fillTable() {
       <td>${lat.toFixed(6)}</td>
       <td>${lon.toFixed(6)}</td>
       <td>
-        <button class="edit-btn" data-ciudad="${ciudad}">Editar</button>
-        <button class="delete-btn" data-ciudad="${ciudad}">Eliminar</button>
+        <div class="buttons-actions">
+          <button class="edit-btn" data-ciudad="${ciudad}">Editar</button>
+          <button class="delete-btn" data-ciudad="${ciudad}">Eliminar</button>
+        </div>
       </td>
     `;
     tbody.appendChild(fila);
