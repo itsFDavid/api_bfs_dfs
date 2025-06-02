@@ -1,6 +1,6 @@
 import os
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask_cors import CORSfrom flask import Flask, request, jsonify
+
 from arbol import Nodo
 from DFS_rec import buscar_solucion_DFS_rec
 from puzzle_lineal import buscar_solucion_BFS
