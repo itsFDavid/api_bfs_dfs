@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>TSP Simulated Annealing</title>
+  <link rel="stylesheet" href="tsp_client.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Simulated Annealing - TSP</h1>
+    <label for="temp-input">Temperatura:</label>
+    <input type="text" id="temp-input" placeholder="Temperatura inicial" value="20" class="input">
+    <button id="btn-default">Calcular con datos por defecto</button>
+    <!-- <button id="btn-personal">Calcular con tus datos</button>
+    <div id="personal-form" class="oculto">
+      <textarea id="coord-input" rows="10" cols="50" placeholder='{"Ciudad1": [lat, lon], ...}'></textarea>
+      <button id="btn-send-personal">Enviar</button>
+    </div> -->
+    <div id="resultado" class="resultado"></div>
+  </div>
+  <script src="tsp_client.js"></script>
+</body>
+</html>
