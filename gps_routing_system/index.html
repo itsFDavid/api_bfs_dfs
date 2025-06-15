@@ -900,6 +900,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+      const URL_API = 'https://api-final-project-suun.onrender.com'
       const map = L.map("map").setView([21, -100], 6);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(
         map
@@ -1352,7 +1353,7 @@
         console.log("Enviando restricciones:", cuerpo.restricciones);
 
         try {
-          const res = await fetch("http://localhost:5001/api/tabu", {
+          const res = await fetch(`${URL_API}/api/tabu`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(cuerpo),
