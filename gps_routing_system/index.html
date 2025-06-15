@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Ruta GPS con Selección en Mapa</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        display: flex;
+        height: 100vh;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f8fafc;
+        color: #334155;
+      }
+
+      #map {
+        flex: 2;
+        position: relative;
+        border-radius: 0 0 0 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        z-index: 1;
+      }
+
+      #panel-derecho {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+        border-left: 1px solid #e2e8f0;
+        min-width: 320px;
+        max-width: 520px;
+        overflow-y: auto;
+      }
+
+      /* Panel de configuración inicial */
+      .panel-configuracion {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      /* Panel de resultados (oculto inicialmente) */
+      .panel-resultados {
+        display: none;
+        flex: 1;
+        flex-direction: column;
+      }
+
+      .controles-ruta {
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+      }
+
+      .controles-compactos {
+        padding: 16px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .card-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: white;
+        margin: 0;
+      }
+
+      .card-title-small {
+        font-size: 14px;
+        font-weight: 600;
+        color: white;
+        margin: 0;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 16px;
+      }
+
+      .btn {
+        padding: 10px 14px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+        justify-content: center;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        border: 2px solid transparent;
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+
+      .btn-outline {
+        background: transparent;
+        color: #64748b;
+        border: 2px solid #e2e8f0;
+      }
+
+      .btn-outline:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+      }
+
+      .btn-success:hover {
+        background: linear-gradient(135deg, #059669, #047857);
+      }
+
+      .btn-warning {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+      }
+
+      .btn-warning:hover {
+        background: linear-gradient(135deg, #d97706, #b45309);
+      }
+
+      .btn-small {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+
+      .btn-clear {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ef4444;
+        border: 2px solid rgba(239, 68, 68, 0.3);
+        font-size: 12px;
+        transition: all 0.2s ease;
+      }
+
+      .btn-clear:hover {
+        background: rgba(246, 80, 80, 0.2);
+        border-color: rgba(239, 68, 68, 0.5);
+        transform: scale(1.05);
+      }
+
+      .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .action-buttons-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+
+      .separator {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.2);
+        margin: 16px 0;
+      }
+
+      .info-text {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        margin-bottom: 12px;
+        border-left: 3px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .puntos-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      .lista-puntos {
+        list-style: none;
+        padding-left: 0;
+        flex: 1;
+        overflow-y: auto;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 10px;
+      }
+
+      .lista-puntos li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        margin-bottom: 6px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 6px;
+        color: #334155;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .punto-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .punto-numero {
+        font-weight: 600;
+        color: #3b82f6;
+        margin-bottom: 2px;
+        font-size: 12px;
+      }
+
+      .punto-nombre {
+        font-size: 11px;
+        color: #64748b;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .eliminar-punto {
+        cursor: pointer;
+        color: #ef4444;
+        font-weight: bold;
+        padding: 4px 6px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        background: rgba(239, 68, 68, 0.1);
+        font-size: 12px;
+      }
+
+      .eliminar-punto:hover {
+        background: rgba(239, 68, 68, 0.2);
+        transform: scale(1.1);
+      }
+
+      /* Configuración de vehículo */
+      .vehiculo-section {
+        margin-bottom: 16px;
+      }
+
+      .vehiculo-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .vehiculo-select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 6px;
+        padding: 8px;
+        color: white;
+        font-size: 12px;
+      }
+
+      .vehiculo-select option {
+        background: #334155;
+        color: white;
+      }
+
+      /* Restricciones */
+      .restricciones-section {
+        margin-bottom: 16px;
+      }
+
+      .restricciones-container {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 12px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .restriccion-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 8px;
+        margin-bottom: 6px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 4px;
+        color: #334155;
+        font-size: 12px;
+      }
+
+      .restriccion-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+      }
+
+      .restriccion-checkbox input[type="checkbox"] {
+        margin: 0;
+      }
+
+      .secuencia-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        margin-bottom: 6px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 4px;
+        color: #334155;
+        font-size: 12px;
+      }
+
+      .secuencia-select {
+        padding: 4px 6px;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        font-size: 11px;
+        background: white;
+        color: #334155;
+      }
+
+      .secuencia-controls {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+      }
+
+      .btn-add-secuencia {
+        background: rgba(16, 185, 129, 0.2);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .btn-add-secuencia:hover {
+        background: rgba(16, 185, 129, 0.3);
+      }
+
+      .btn-remove-secuencia {
+        background: rgba(239, 68, 68, 0.2);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .btn-remove-secuencia:hover {
+        background: rgba(239, 68, 68, 0.3);
+      }
+
+      /* Panel de resultados */
+      .resultados-header {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .resultados-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .resultados-subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+      }
+
+      .resumen-section {
+        padding: 24px;
+        background: white;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .resumen-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 20px;
+        width: 100%;
+      }
+
+      .resumen-item {
+        text-align: center;
+        padding: 16px;
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .resumen-valor {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 4px;
+      }
+
+      .resumen-label {
+        font-size: 11px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .fuel-item {
+        background: linear-gradient(135deg, #fef3c7, #fbbf24);
+        border: 1px solid #f59e0b;
+      }
+
+      .fuel-item .resumen-valor {
+        color: #92400e;
+      }
+
+      .fuel-item .resumen-label {
+        color: #a16207;
+      }
+
+      .instrucciones-section {
+        flex: 1;
+        padding: 24px;
+        overflow-y: auto;
+      }
+
+      .instrucciones-header-inline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1e293b;
+      }
+
+      .segmento {
+        background: #f8fafc;
+        margin-bottom: 16px;
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #3b82f6;
+      }
+
+      .segmento-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .segmento-titulo {
+        font-weight: 600;
+        color: #1e293b;
+      }
+
+      .segmento-distancia {
+        background: #3b82f6;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .ruta-puntos {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #475569;
+      }
+
+      .punto-ruta {
+        background: #3b82f6;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .flecha-ruta {
+        color: #64748b;
+      }
+
+      .paso {
+        margin-left: 16px;
+        border-left: 3px solid #e2e8f0;
+        padding-left: 12px;
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #475569;
+      }
+
+      .acciones-finales {
+        padding: 20px;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      /* Error/Success Messages */
+      .alert {
+        padding: 10px 14px;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+      }
+
+      .alert-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #dc2626;
+      }
+
+      .alert-success {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #16a34a;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        body {
+          flex-direction: column;
+        }
+
+        #map {
+          flex: 1;
+          min-height: 50vh;
+          border-radius: 0;
+        }
+
+        #panel-derecho {
+          flex: 1;
+          min-width: auto;
+          max-width: none;
+          max-height: 50vh;
+        }
+
+        .controles-ruta {
+          padding: 16px;
+        }
+
+        .btn-group {
+          flex-direction: column;
+        }
+
+        .action-buttons-row {
+          grid-template-columns: 1fr;
+        }
+
+        .resumen-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .acciones-finales {
+          grid-template-columns: 1fr;
+        }
+
+        .vehiculo-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Loading Animation */
+      .loading {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Scrollbar Styling */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <div id="panel-derecho">
+      <div id="panel-configuracion" class="panel-configuracion">
+        <div class="controles-ruta">
+          <div class="card-header">
+            <i class="fas fa-route"></i>
+            <h2 class="card-title">Rutas GPS</h2>
+          </div>
+
+          <div id="alert-container"></div>
+
+          <div class="card-header">
+            <i class="fas fa-mouse-pointer"></i>
+            <h3 class="card-title-small">Modo de Interacción</h3>
+          </div>
+          <div class="btn-group">
+            <button id="modo-libre" class="btn btn-secondary">
+              <i class="fas fa-hand-paper"></i>
+              Mover
+            </button>
+            <button id="modo-seleccion" class="btn btn-primary">
+              <i class="fas fa-map-pin"></i>
+              Seleccionar
+            </button>
+          </div>
+
+          <div class="separator"></div>
+
+          <div class="card-header">
+            <i class="fas fa-map-marked-alt"></i>
+            <h3 class="card-title-small">Selección de Puntos</h3>
+          </div>
+
+          <div class="info-text">
+            <i class="fas fa-info-circle"></i>
+            Haz clic en el mapa para agregar puntos
+          </div>
+
+          <!-- Contenedor flexible para la lista de puntos -->
+          <div class="puntos-container">
+            <ul class="lista-puntos" id="lista-puntos"></ul>
+          </div>
+
+          <div class="separator"></div>
+
+          <!-- Configuración de Vehículo -->
+          <div class="vehiculo-section">
+            <div class="card-header">
+              <i class="fas fa-car"></i>
+              <h3 class="card-title-small">Configuración de Vehículo</h3>
+            </div>
+
+            <div class="vehiculo-grid">
+              <div>
+                <div
+                  style="
+                    font-size: 11px;
+                    margin-bottom: 4px;
+                    color: rgba(255, 255, 255, 0.9);
+                  "
+                >
+                  Tipo de Motor:
+                </div>
+                <select id="tipo-motor" class="vehiculo-select">
+                  <option value="4">4 Cilindros</option>
+                  <option value="6">6 Cilindros</option>
+                  <option value="8">8 Cilindros</option>
+                  <option value="12">12 Cilindros</option>
+                </select>
+              </div>
+              <div>
+                <div
+                  style="
+                    font-size: 11px;
+                    margin-bottom: 4px;
+                    color: rgba(255, 255, 255, 0.9);
+                  "
+                >
+                  Combustible:
+                </div>
+                <select id="tipo-combustible" class="vehiculo-select">
+                  <option value="magna">Magna ($23.66/L)</option>
+                  <option value="premium">Premium ($25.58/L)</option>
+                  <option value="diesel">Diésel ($25.97/L)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="info-text" id="consumo-info">
+              <i class="fas fa-gas-pump"></i>
+              <span id="consumo-text"
+                >4 Cilindros: 7.5-9.5 L/100km promedio</span
+              >
+            </div>
+          </div>
+
+          <div class="separator"></div>
+
+          <!-- Sección de Restricciones -->
+          <div class="restricciones-section">
+            <div class="card-header">
+              <i class="fas fa-ban"></i>
+              <h3 class="card-title-small">Restricciones de Ruta</h3>
+            </div>
+
+            <!-- Excluir Ciudades -->
+            <div style="margin-bottom: 12px">
+              <div
+                style="
+                  font-size: 12px;
+                  margin-bottom: 6px;
+                  color: rgba(255, 255, 255, 0.9);
+                "
+              >
+                <i class="fas fa-times-circle"></i> Excluir Puntos:
+              </div>
+              <div class="restricciones-container" id="excluir-container">
+                <div
+                  style="
+                    text-align: center;
+                    color: rgba(255, 255, 255, 0.7);
+                    font-size: 11px;
+                    padding: 10px;
+                  "
+                >
+                  Agrega puntos para ver opciones de exclusión
+                </div>
+              </div>
+            </div>
+
+            <!-- Prohibir Secuencias -->
+            <div style="margin-bottom: 12px">
+              <div
+                style="
+                  font-size: 12px;
+                  margin-bottom: 6px;
+                  color: rgba(255, 255, 255, 0.9);
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                "
+              >
+                <span
+                  ><i class="fas fa-arrow-right"></i> Prohibir Secuencias:</span
+                >
+                <button id="btn-add-secuencia" class="btn-add-secuencia">
+                  <i class="fas fa-plus"></i> Agregar
+                </button>
+              </div>
+              <div class="restricciones-container" id="secuencias-container">
+                <div
+                  style="
+                    text-align: center;
+                    color: rgba(255, 255, 255, 0.7);
+                    font-size: 11px;
+                    padding: 10px;
+                  "
+                >
+                  No hay secuencias prohibidas
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <button id="btn-calcular" class="btn btn-success">
+              <i class="fas fa-route"></i>
+              <span id="calcular-text">Calcular Ruta Óptima</span>
+            </button>
+            <button id="btn-limpiar" class="btn btn-outline btn-clear">
+              <i class="fas fa-trash"></i>
+              Limpiar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-resultados" class="panel-resultados">
+        <div class="resultados-header">
+          <h2 class="resultados-title">
+            <i class="fas fa-check-circle"></i>
+            Ruta Calculada
+          </h2>
+          <p class="resultados-subtitle">Ruta óptima generada exitosamente</p>
+        </div>
+
+        <div class="resumen-section">
+          <div id="resumen-contenido"></div>
+        </div>
+
+        <div class="instrucciones-section">
+          <h3 class="instrucciones-header-inline">
+            <i class="fas fa-list-ol"></i>
+            Instrucciones de Navegación
+          </h3>
+          <div id="instrucciones-contenido"></div>
+        </div>
+
+        <div class="acciones-finales">
+          <button id="btn-exportar-final" class="btn btn-primary">
+            <i class="fas fa-download"></i>
+            Exportar Ruta
+          </button>
+          <button id="btn-nueva-ruta" class="btn btn-warning">
+            <i class="fas fa-plus"></i>
+            Nueva Ruta
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      const map = L.map("map").setView([21, -100], 6);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(
+        map
+      );
+
+      let modoSeleccion = true;
+      let puntos = [],
+        markers = [],
+        polyline;
+      let rutaCalculada = false;
+      let allMapLayers = [];
+      let secuenciasProhibidas = [];
+
+      const listaEl = document.getElementById("lista-puntos");
+      const resumenEl = document.getElementById("resumen-contenido");
+      const instrEl = document.getElementById("instrucciones-contenido");
+      const alertContainer = document.getElementById("alert-container");
+      const calcularBtn = document.getElementById("btn-calcular");
+      const calcularText = document.getElementById("calcular-text");
+      const excluirContainer = document.getElementById("excluir-container");
+      const secuenciasContainer = document.getElementById(
+        "secuencias-container"
+      );
+      const tipoMotorSelect = document.getElementById("tipo-motor");
+      const tipoCombustibleSelect = document.getElementById("tipo-combustible");
+      const consumoText = document.getElementById("consumo-text");
+
+      const panelConfiguracion = document.getElementById("panel-configuracion");
+      const panelResultados = document.getElementById("panel-resultados");
+
+      // Configuración de combustibles y consumos
+      const precios = {
+        magna: 23.66,
+        premium: 25.58,
+        diesel: 25.97,
+      };
+
+      const consumos = {
+        4: {
+          promedio: 8.5,
+          descripcion: "4 Cilindros: 7.5-9.5 L/100km promedio",
+        },
+        6: {
+          promedio: 8.0,
+          descripcion: "6 Cilindros: 7.1-9.1 L/100km promedio",
+        },
+        8: {
+          promedio: 11.0,
+          descripcion: "8 Cilindros: 9-13 L/100km promedio",
+        },
+        12: {
+          promedio: 11.25,
+          descripcion: "12 Cilindros: 10-12.5 L/100km promedio",
+        },
+      };
+
+      // Función para calcular costo de combustible
+      function calcularCostoCombustible(distanciaKm) {
+        const tipoMotor = tipoMotorSelect.value;
+        const tipoCombustible = tipoCombustibleSelect.value;
+
+        const consumoPorKm = consumos[tipoMotor].promedio / 100; // L/km
+        const litrosNecesarios = distanciaKm * consumoPorKm;
+        const precioTotal = litrosNecesarios * precios[tipoCombustible];
+
+        return {
+          litros: litrosNecesarios,
+          precio: precioTotal,
+          precioPorLitro: precios[tipoCombustible],
+        };
+      }
+
+      // Actualizar información de consumo
+      function actualizarInfoConsumo() {
+        const tipoMotor = tipoMotorSelect.value;
+        consumoText.textContent = consumos[tipoMotor].descripcion;
+      }
+
+      // Event listeners para cambios en configuración de vehículo
+      tipoMotorSelect.addEventListener("change", actualizarInfoConsumo);
+      tipoCombustibleSelect.addEventListener("change", actualizarInfoConsumo);
+
+      function mostrarPanelResultados() {
+        panelConfiguracion.style.display = "none";
+        panelResultados.style.display = "flex";
+        rutaCalculada = true;
+      }
+
+      function mostrarPanelConfiguracion() {
+        panelConfiguracion.style.display = "flex";
+        panelResultados.style.display = "none";
+        rutaCalculada = false;
+      }
+
+      function showAlert(message, type = "error") {
+        alertContainer.innerHTML = `
+          <div class="alert alert-${type}">
+            <i class="fas fa-${
+              type === "error" ? "exclamation-circle" : "check-circle"
+            }"></i>
+            ${message}
+          </div>
+        `;
+        setTimeout(() => {
+          alertContainer.innerHTML = "";
+        }, 25000);
+      }
+
+      function updateModeButtons() {
+        const modoLibreBtn = document.getElementById("modo-libre");
+        const modoSeleccionBtn = document.getElementById("modo-seleccion");
+
+        if (modoSeleccion) {
+          modoLibreBtn.className = "btn btn-secondary";
+          modoSeleccionBtn.className = "btn btn-primary";
+        } else {
+          modoLibreBtn.className = "btn btn-primary";
+          modoSeleccionBtn.className = "btn btn-secondary";
+        }
+      }
+
+      function actualizarExclusiones() {
+        if (puntos.length === 0) {
+          excluirContainer.innerHTML = `
+            <div style="text-align: center; color: rgba(255,255,255,0.7); font-size: 11px; padding: 10px;">
+              Agrega puntos para ver opciones de exclusión
+            </div>
+          `;
+          return;
+        }
+
+        excluirContainer.innerHTML = "";
+        puntos.forEach((punto, index) => {
+          const item = document.createElement("div");
+          item.className = "restriccion-item";
+          item.innerHTML = `
+            <div class="restriccion-checkbox">
+              <input type="checkbox" id="excluir-${index}" data-punto-index="${index}">
+              <label for="excluir-${index}">Punto ${index + 1}</label>
+            </div>
+          `;
+          excluirContainer.appendChild(item);
+        });
+      }
+
+      function actualizarSecuencias() {
+        if (secuenciasProhibidas.length === 0) {
+          secuenciasContainer.innerHTML = `
+            <div style="text-align: center; color: rgba(255,255,255,0.7); font-size: 11px; padding: 10px;">
+              No hay secuencias prohibidas
+            </div>
+          `;
+          return;
+        }
+
+        secuenciasContainer.innerHTML = "";
+        secuenciasProhibidas.forEach((secuencia, index) => {
+          const item = document.createElement("div");
+          item.className = "secuencia-item";
+          item.innerHTML = `
+            <span style="font-size: 11px;">Punto ${secuencia.desde + 1}</span>
+            <i class="fas fa-arrow-right" style="color: #ef4444;"></i>
+            <span style="font-size: 11px;">Punto ${secuencia.hasta + 1}</span>
+            <button class="btn-remove-secuencia" onclick="eliminarSecuencia(${index})">
+              <i class="fas fa-times"></i>
+            </button>
+          `;
+          secuenciasContainer.appendChild(item);
+        });
+      }
+
+      function agregarSecuencia() {
+        if (puntos.length < 2) {
+          showAlert(
+            "Necesitas al menos 2 puntos para crear una secuencia prohibida."
+          );
+          return;
+        }
+
+        const item = document.createElement("div");
+        item.className = "secuencia-item";
+
+        const selectDesde = document.createElement("select");
+        selectDesde.className = "secuencia-select";
+        const selectHasta = document.createElement("select");
+        selectHasta.className = "secuencia-select";
+
+        puntos.forEach((punto, index) => {
+          const optionDesde = document.createElement("option");
+          optionDesde.value = index;
+          optionDesde.textContent = `Punto ${index + 1}`;
+          selectDesde.appendChild(optionDesde);
+
+          const optionHasta = document.createElement("option");
+          optionHasta.value = index;
+          optionHasta.textContent = `Punto ${index + 1}`;
+          selectHasta.appendChild(optionHasta);
+        });
+
+        item.innerHTML = `
+          <span style="font-size: 11px;">De:</span>
+          <span style="font-size: 11px;">A:</span>
+          <div class="secuencia-controls">
+            <button class="btn-add-secuencia" onclick="confirmarSecuencia(this)">
+              <i class="fas fa-check"></i>
+            </button>
+            <button class="btn-remove-secuencia" onclick="cancelarSecuencia(this)">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        `;
+
+        const spans = item.querySelectorAll("span");
+        spans[0].parentNode.insertBefore(selectDesde, spans[1]);
+        spans[1].parentNode.insertBefore(
+          selectHasta,
+          item.querySelector(".secuencia-controls")
+        );
+
+        if (secuenciasProhibidas.length === 0) {
+          secuenciasContainer.innerHTML = "";
+        }
+        secuenciasContainer.appendChild(item);
+      }
+
+      function confirmarSecuencia(btn) {
+        const item = btn.closest(".secuencia-item");
+        const selects = item.querySelectorAll(".secuencia-select");
+        const desde = parseInt(selects[0].value);
+        const hasta = parseInt(selects[1].value);
+
+        if (desde === hasta) {
+          showAlert("Un punto no puede prohibirse a sí mismo.");
+          return;
+        }
+
+        const existe = secuenciasProhibidas.some(
+          (s) => s.desde === desde && s.hasta === hasta
+        );
+        if (existe) {
+          showAlert("Esta secuencia ya está prohibida.");
+          return;
+        }
+
+        secuenciasProhibidas.push({ desde, hasta });
+        actualizarSecuencias();
+        showAlert("Secuencia prohibida agregada", "success");
+      }
+
+      function cancelarSecuencia(btn) {
+        const item = btn.closest(".secuencia-item");
+        item.remove();
+        if (secuenciasContainer.children.length === 0) {
+          actualizarSecuencias();
+        }
+      }
+
+      function eliminarSecuencia(index) {
+        secuenciasProhibidas.splice(index, 1);
+        actualizarSecuencias();
+        showAlert("Secuencia eliminada", "success");
+      }
+
+      document.getElementById("modo-libre").onclick = () => {
+        modoSeleccion = false;
+        updateModeButtons();
+        showAlert("Modo mover mapa activado", "success");
+      };
+
+      document.getElementById("modo-seleccion").onclick = () => {
+        if (rutaCalculada) {
+          showAlert(
+            "No puedes agregar más puntos. La ruta ya fue calculada.",
+            "error"
+          );
+          return;
+        }
+        modoSeleccion = true;
+        updateModeButtons();
+        showAlert("Modo selección activado", "success");
+      };
+
+      document.getElementById("btn-add-secuencia").onclick = agregarSecuencia;
+
+      function actualizarLista() {
+        listaEl.innerHTML = "";
+        puntos.forEach((p, i) => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <div class="punto-info">
+              <div class="punto-numero">Punto ${i + 1}</div>
+              <div class="punto-nombre">${p.nombre}</div>
+            </div>
+          `;
+
+          if (!rutaCalculada) {
+            const btn = document.createElement("span");
+            btn.innerHTML = '<i class="fas fa-times"></i>';
+            btn.className = "eliminar-punto";
+            btn.onclick = () => {
+              puntos.splice(i, 1);
+              secuenciasProhibidas = secuenciasProhibidas
+                .filter((s) => s.desde !== i && s.hasta !== i)
+                .map((s) => ({
+                  desde: s.desde > i ? s.desde - 1 : s.desde,
+                  hasta: s.hasta > i ? s.hasta - 1 : s.hasta,
+                }));
+
+              actualizarLista();
+              redraw();
+              actualizarExclusiones();
+              actualizarSecuencias();
+              showAlert("Punto eliminado", "success");
+            };
+            li.appendChild(btn);
+          }
+
+          listaEl.appendChild(li);
+        });
+
+        actualizarExclusiones();
+      }
+
+      function limpiarMapa() {
+        markers.forEach((m) => map.removeLayer(m));
+        markers = [];
+
+        allMapLayers.forEach((layer) => {
+          if (map.hasLayer(layer)) {
+            map.removeLayer(layer);
+          }
+        });
+        allMapLayers = [];
+
+        if (polyline) {
+          map.removeLayer(polyline);
+          polyline = null;
+        }
+      }
+
+      function redraw() {
+        markers.forEach((m) => map.removeLayer(m));
+        markers = [];
+
+        markers = puntos.map((p, i) => {
+          const marker = L.marker([p.lat, p.lng]).addTo(map);
+
+          marker.bindTooltip(`Punto ${i + 1}`, {
+            permanent: true,
+            direction: "top",
+            offset: [0, -10],
+            className: "marker-tooltip",
+          });
+
+          marker.bindPopup(`<strong>Punto ${i + 1}</strong><br>${p.nombre}`);
+
+          return marker;
+        });
+
+        if (polyline) map.removeLayer(polyline);
+      }
+
+      map.on("click", async (e) => {
+        if (rutaCalculada) {
+          showAlert(
+            "No puedes agregar más puntos. La ruta ya fue calculada.",
+            "error"
+          );
+          return;
+        }
+
+        if (!modoSeleccion) return;
+
+        const { lat, lng } = e.latlng;
+
+        let nombre = `(${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
+          );
+          const data = await res.json();
+          nombre = data.display_name || nombre;
+        } catch (err) {
+          console.warn("No se pudo obtener el nombre del lugar", err);
+        }
+
+        puntos.push({ lat, lng, nombre });
+        actualizarLista();
+        redraw();
+        showAlert("Punto agregado correctamente", "success");
+      });
+
+      document.getElementById("btn-limpiar").onclick = () => {
+        if (rutaCalculada) {
+          showAlert(
+            "No puedes limpiar puntos. La ruta ya fue calculada. Usa 'Nueva Ruta' para empezar de nuevo.",
+            "error"
+          );
+          return;
+        }
+
+        puntos = [];
+        secuenciasProhibidas = [];
+        actualizarLista();
+        limpiarMapa();
+        actualizarExclusiones();
+        actualizarSecuencias();
+        showAlert("Puntos limpiados", "success");
+      };
+
+      document.getElementById("btn-calcular").onclick = async () => {
+        if (puntos.length < 2) {
+          showAlert("Selecciona al menos 2 puntos.");
+          return;
+        }
+
+        calcularBtn.classList.add("loading");
+        calcularText.innerHTML = '<span class="spinner"></span> Calculando...';
+        calcularBtn.disabled = true;
+
+        const coord = {};
+        puntos.forEach((p, i) => {
+          coord[`Punto${i + 1}`] = [p.lat, p.lng];
+        });
+
+        const excluirCiudades = [];
+        const checkboxes = excluirContainer.querySelectorAll(
+          'input[type="checkbox"]:checked'
+        );
+        checkboxes.forEach((checkbox) => {
+          const index = parseInt(checkbox.dataset.puntoIndex);
+          excluirCiudades.push(`Punto${index + 1}`);
+        });
+
+        const prohibirSecuencias = secuenciasProhibidas.map((s) => [
+          `Punto${s.desde + 1}`,
+          `Punto${s.hasta + 1}`,
+        ]);
+
+        const cuerpo = {
+          coord,
+          iteraciones: 150,
+          tamaño_tabu: 15,
+          restricciones: {
+            excluir_ciudades: excluirCiudades,
+            prohibir_secuencias: prohibirSecuencias,
+          },
+        };
+
+        console.log("Enviando restricciones:", cuerpo.restricciones);
+
+        try {
+          const res = await fetch("http://localhost:5001/api/tabu", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(cuerpo),
+          });
+
+          if (!res.ok) {
+            const json = await res.json();
+            throw new Error(
+              `${json.error || "Error desconocido"} (Código: ${res.status})`
+            );
+          }
+
+          const json = await res.json();
+          const { ruta: mejor_ruta, data } = json;
+
+          if (polyline) map.removeLayer(polyline);
+
+          puntos = mejor_ruta.map((nombrePunto) => {
+            return puntos.find((p, i) => `Punto${i + 1}` === nombrePunto);
+          });
+
+          actualizarLista();
+          redraw();
+
+          const coords = data.features[0].geometry.coordinates.map((coord) => [
+            coord[1],
+            coord[0],
+          ]);
+
+          polyline = L.polyline(coords, {
+            color: "#3b82f6",
+            weight: 4,
+            opacity: 0.8,
+          }).addTo(map);
+          map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
+
+          const sum = data.features[0].properties.summary;
+          const distanciaKm = sum.distance / 1000;
+          const costoCombustible = calcularCostoCombustible(distanciaKm);
+
+          resumenEl.innerHTML = `
+            <div class="resumen-grid">
+              <div class="resumen-item">
+                <div class="resumen-valor">${distanciaKm.toFixed(2)}</div>
+                <div class="resumen-label">Kilómetros</div>
+              </div>
+              <div class="resumen-item">
+                <div class="resumen-valor">${(Math.ceil(sum.duration / 60))}</div>
+                <div class="resumen-label">Minutos</div>
+              </div>
+              <div class="resumen-item fuel-item">
+                <div class="resumen-valor">$${costoCombustible.precio.toFixed(
+                  2
+                )}</div>
+                <div class="resumen-label">Combustible (${costoCombustible.litros.toFixed(
+                  1
+                )}L)</div>
+              </div>
+            </div>
+          `;
+
+          instrEl.innerHTML = "";
+
+          for (let i = 0; i < puntos.length - 1; i++) {
+            const segmentoIndex = i;
+            const puntoOrigen = i + 1;
+            const puntoDestino = i + 2;
+
+            const segmento =
+              data.features[0].properties.segments[segmentoIndex];
+
+            const segDiv = document.createElement("div");
+            segDiv.className = "segmento";
+
+            segDiv.innerHTML = `
+              <div class="segmento-header">
+                <div class="segmento-titulo">
+                  <div class="ruta-puntos">
+                    <span class="punto-ruta">Punto ${puntoOrigen}</span>
+                    <span class="flecha-ruta"><i class="fas fa-arrow-right"></i></span>
+                    <span class="punto-ruta">Punto ${puntoDestino}</span>
+                  </div>
+                </div>
+                <span class="segmento-distancia">${(
+                  segmento.distance / 1000
+                ).toFixed(2)} km</span>
+              </div>`;
+
+            segmento.steps.forEach((step) => {
+              const pasoDiv = document.createElement("div");
+              pasoDiv.className = "paso";
+              pasoDiv.innerHTML = `<div>${step.instruction}</div>`;
+              segDiv.appendChild(pasoDiv);
+            });
+
+            instrEl.appendChild(segDiv);
+          }
+
+          mostrarPanelResultados();
+        } catch (e) {
+          console.error("Error al llamar a la API:", e);
+          // showAlert("Error al conectar con el servidor. Verifica que la API esté funcionando.");
+          showAlert(`Error al calcular la ruta: ${e}`, "error");
+        } finally {
+          calcularBtn.classList.remove("loading");
+          calcularText.innerHTML = "Calcular Ruta Óptima";
+          calcularBtn.disabled = false;
+        }
+      };
+
+      function exportarRuta() {
+        if (!polyline) {
+          alert("No hay ruta para exportar.");
+          return;
+        }
+
+        const geojson = {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: {
+                nombre: "Ruta Óptima",
+              },
+              geometry: {
+                type: "LineString",
+                coordinates: polyline
+                  .getLatLngs()
+                  .map((latlng) => [latlng.lng, latlng.lat]),
+              },
+            },
+          ],
+        };
+
+        const blob = new Blob([JSON.stringify(geojson, null, 2)], {
+          type: "application/geo+json",
+        });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "ruta.geojson";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      // document.getElementById("btn-exportar").onclick = exportarRuta;
+      document.getElementById("btn-exportar-final").onclick = exportarRuta;
+
+      document.getElementById("btn-nueva-ruta").onclick = () => {
+        puntos = [];
+        secuenciasProhibidas = [];
+        limpiarMapa();
+
+        rutaCalculada = false;
+        modoSeleccion = true;
+        updateModeButtons();
+
+        mostrarPanelConfiguracion();
+
+        listaEl.innerHTML = "";
+        resumenEl.innerHTML = "";
+        instrEl.innerHTML = "";
+        actualizarExclusiones();
+        actualizarSecuencias();
+
+        map.setView([21, -100], 6);
+
+        showAlert("Nueva ruta iniciada", "success");
+      };
+
+      // Inicializar
+      updateModeButtons();
+      actualizarInfoConsumo();
+    </script>
+  </body>
+</html>
